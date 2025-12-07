@@ -109,58 +109,59 @@
 </div>
 
 <script>
-    // === 1. JSON KONFIGURATION (С ОПИСАНИЯМИ) ===
+    // === 1. JSON CONFIGURATION (ОПТИМИЗИРОВАНО ДЛЯ GEMINI) ===
+    // Мы меняем val на фразы, которые звучат естественно
     const PROMPT_CONFIG = {
-        "Свет": {
-            "Время суток": [
-                { val: "Golden hour", desc: "Золотой час. Мягкий, теплый, объемный свет перед закатом. Идеально для портретов и пейзажей." },
-                { val: "Blue hour", desc: "Синий час. Сумеречное, холодное освещение сразу после заката. Создает меланхолию." },
-                { val: "Midday sun", desc: "Жесткий полуденный свет. Четкие, резкие тени. Высокий контраст." }
-            ],
-            "Искусственный": [
-                { val: "Neon lighting", desc: "Яркие неоновые огни (киберпанк). Розовые, голубые оттенки, глубокие тени." },
-                { val: "Studio lighting", desc: "Профессиональный студийный свет. Идеальная кожа, мягкие тени, софтбоксы." },
-                { val: "Candlelight", desc: "Свет от свечи. Очень теплый, мерцающий, интимный свет с глубокими тенями." }
-            ],
-            "Атмосфера": [
-                { val: "Volumetric lighting", desc: "Объемный свет (God rays). Лучи света, пробивающиеся через дымку или пыль." },
-                { val: "Cinematic lighting", desc: "Киношное освещение. Драматичный контраст, акцент на объекте." }
-            ]
-        },
         "Камера": {
             "Ракурс": [
-                { val: "Drone view", desc: "Вид с дрона. Съемка с большой высоты, показывает масштаб локации." },
-                { val: "Low angle shot", desc: "Нижний ракурс. Камера смотрит снизу вверх, делая объект величественным и огромным." },
-                { val: "Eye level", desc: "На уровне глаз. Нейтральный, реалистичный взгляд." },
-                { val: "Top down view", desc: "Строго сверху вниз (Flat lay). Хорошо для схем, карт или натюрмортов." }
+                { val: "Viewed from a drone perspective", desc: "Вид с дрона. Съемка с большой высоты, показывает масштаб." },
+                { val: "Shot from a low angle looking up", desc: "Нижний ракурс. Камера смотрит снизу вверх, объект кажется огромным." },
+                { val: "Captured at eye level", desc: "На уровне глаз. Нейтральный, реалистичный взгляд." },
+                { val: "Top-down flat lay view", desc: "Строго сверху вниз. Идеально для раскладок предметов." }
             ],
             "Объектив": [
-                { val: "Macro shot", desc: "Макросъемка. Экстремально близко, видно текстуры и мелкие детали." },
-                { val: "Fisheye lens", desc: "Рыбий глаз. Сильное искажение по краям, очень широкий угол обзора." },
-                { val: "35mm lens", desc: "Классический объектив 35мм. Естественное восприятие, как в кино." },
-                { val: "Telephoto lens", desc: "Телеобъектив. Сжимает перспективу, фон кажется ближе к объекту." }
+                { val: "Extreme close-up macro shot", desc: "Макросъемка. Видны мельчайшие текстуры." },
+                { val: "Shot with a wide-angle fisheye lens", desc: "Рыбий глаз. Сильное искажение, очень широкий обзор." },
+                { val: "Photographed with a 35mm lens", desc: "Классика 35мм. Киношное, естественное восприятие." },
+                { val: "Long-range telephoto shot", desc: "Телеобъектив. Сжатая перспектива, размытый фон." }
+            ]
+        },
+        "Свет": {
+            "Время": [
+                { val: "Illuminated by soft golden hour sunlight", desc: "Золотой час. Теплый свет перед закатом." },
+                { val: "Lighting typical of the blue hour", desc: "Синий час. Холодное сумеречное освещение." },
+                { val: "Under harsh midday sun", desc: "Жесткое полуденное солнце с резкими тенями." }
+            ],
+            "Тип": [
+                { val: "Bathed in neon cyberpunk lighting", desc: "Неон. Яркие цветные огни в темноте." },
+                { val: "Lit by professional studio lighting", desc: "Студийный свет. Идеально для портретов." },
+                { val: "Illuminated by warm candlelight", desc: "Свет свечи. Уютная, интимная атмосфера." }
+            ],
+            "Эффекты": [
+                { val: "Featuring volumetric God rays", desc: "Объемные лучи света (God rays) сквозь дымку." },
+                { val: "With dramatic cinematic high-contrast lighting", desc: "Киношный драматичный свет." }
             ]
         },
         "Стиль": {
-            "Арт": [
-                { val: "Oil painting", desc: "Масляная живопись. Видны мазки кисти, текстура холста." },
-                { val: "Watercolor", desc: "Акварель. Полупрозрачные краски, потеки, легкость." },
-                { val: "Pencil sketch", desc: "Карандашный набросок. Черно-белый, штриховка, графика." },
-                { val: "Pixel art", desc: "Пиксель-арт. Стилистика старых 8-битных игр." }
+            "Традиционный": [
+                { val: "Oil painting style with visible brushstrokes", desc: "Масло. Видны мазки кисти." },
+                { val: "Loose watercolor painting style", desc: "Акварель. Легкая, воздушная, с потеками." },
+                { val: "Charcoal pencil sketch", desc: "Угольный набросок. Графично, черно-белое." }
             ],
-            "3D & Render": [
-                { val: "Unreal Engine 5", desc: "Ультра-реалистичный рендер игровой графики нового поколения." },
-                { val: "Claymation", desc: "Пластилиновая анимация. Мягкие формы, стиль 'Уоллес и Громит'." },
-                { val: "Low poly", desc: "Низкополигональная 3D графика. Угловатые формы, минимализм." }
+            "Цифровой": [
+                { val: "Rendered in Unreal Engine 5", desc: "Гиперреализм игровой графики." },
+                { val: "In the style of a claymation movie", desc: "Пластилиновая анимация." },
+                { val: "Low-poly 3D art style", desc: "Низкополигональная 3D графика." },
+                { val: "Grainy vintage film aesthetics", desc: "Эстетика старой зернистой пленки." }
             ]
         }
     };
 
-    // Состояние приложения
     let activeParams = [];
-    let tempSelection = null; // { val, desc }
+    let tempSelection = null;
 
-    // === 2. ИНИЦИАЛИЗАЦИЯ СЕЛЕКТОРОВ ===
+    // === ИНИЦИАЛИЗАЦИЯ И ЛОГИКА ===
+
     function initSelectors() {
         const groupSelect = document.getElementById('groupSelect');
         groupSelect.innerHTML = Object.keys(PROMPT_CONFIG).map(g => `<option value="${g}">${g}</option>`).join('');
@@ -174,52 +175,41 @@
         renderChips();
     }
 
-    // === 3. РЕНДЕР ЧИПОВ (НОВАЯ ФИЧА) ===
     function renderChips() {
         const group = document.getElementById('groupSelect').value;
         const type = document.getElementById('typeSelect').value;
         const container = document.getElementById('chipsContainer');
 
-        // Очистка
         container.innerHTML = '';
         document.getElementById('descriptionText').innerText = "Нажмите на чип, чтобы увидеть описание...";
         document.getElementById('addBtn').disabled = true;
         tempSelection = null;
 
-        // Генерация кнопок
         PROMPT_CONFIG[group][type].forEach(item => {
             const btn = document.createElement('button');
-            btn.className = 'chip bg-slate-700 text-slate-200 px-4 py-2 rounded-full text-sm font-medium shadow-sm';
-            btn.innerText = item.val;
+            btn.className = 'chip bg-slate-700 text-slate-200 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition-all hover:bg-slate-600';
+            btn.innerText = item.val.split(' ').slice(0, 3).join(' ') + '...'; // Показываем на кнопке только первые 3 слова для краткости
+            btn.title = item.val; // Полный текст при наведении
 
             btn.onclick = () => {
-                // Сброс активного класса у всех
                 document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                // Активация текущего
                 btn.classList.add('active');
-                // Показ описания
                 document.getElementById('descriptionText').innerText = item.desc;
-                // Сохранение выбора
                 tempSelection = { ...item, typeName: type };
-                // Включение кнопки
                 document.getElementById('addBtn').disabled = false;
             };
             container.appendChild(btn);
         });
     }
 
-    // === 4. УПРАВЛЕНИЕ СПИСКОМ И DRAG & DROP ===
-
     function addSelectedParameter() {
         if(!tempSelection) return;
-
         const newParam = {
             id: Date.now(),
             type: tempSelection.typeName,
-            value: tempSelection.val,
+            value: tempSelection.val, // Здесь теперь длинная фраза
             desc: tempSelection.desc
         };
-
         activeParams.push(newParam);
         renderList();
         generatePrompt();
@@ -232,106 +222,101 @@
         generatePrompt();
     }
 
-    // Отрисовка списка с поддержкой Drag & Drop
+    // Рендер списка (Drag & Drop логика осталась прежней)
     function renderList() {
         const container = document.getElementById('activeModules');
         container.innerHTML = '';
-
         activeParams.forEach((param, index) => {
             const el = document.createElement('div');
-            el.className = 'draggable-item glass-panel p-3 rounded-xl flex justify-between items-center border-l-4 border-yellow-500';
+            el.className = 'draggable-item glass-panel p-3 rounded-xl flex justify-between items-center border-l-4 border-yellow-500 mb-2';
             el.setAttribute('draggable', 'true');
             el.dataset.index = index;
-
+            // Показываем короткое описание типа и саму фразу
             el.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="cursor-grab text-slate-500 hover:text-white" title="Тяни меня">
-                            <svg width="12" height="20" viewBox="0 0 6 10" fill="currentColor">
-                                <circle cx="1" cy="1" r="1"/><circle cx="1" cy="5" r="1"/><circle cx="1" cy="9" r="1"/>
-                                <circle cx="5" cy="1" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="5" cy="9" r="1"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <span class="text-[10px] uppercase text-slate-400 block tracking-wider">${param.type}</span>
-                            <span class="text-white font-medium text-lg">${param.value}</span>
-                        </div>
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="cursor-grab text-slate-500 hover:text-white shrink-0">
+                        <svg width="12" height="20" viewBox="0 0 6 10" fill="currentColor"><circle cx="1" cy="1" r="1"/><circle cx="1" cy="5" r="1"/><circle cx="1" cy="9" r="1"/><circle cx="5" cy="1" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="5" cy="9" r="1"/></svg>
                     </div>
-                    <button onclick="removeParam(${param.id})" class="text-slate-500 hover:text-red-400 p-2 text-xl">&times;</button>
-                `;
-
-            // События Drag & Drop
+                    <div class="truncate">
+                        <span class="text-[10px] uppercase text-slate-400 block tracking-wider">${param.type}</span>
+                        <span class="text-white font-medium text-sm truncate block" title="${param.value}">${param.value}</span>
+                    </div>
+                </div>
+                <button onclick="removeParam(${param.id})" class="text-slate-500 hover:text-red-400 p-2 text-xl shrink-0">&times;</button>
+            `;
             addDnDEvents(el);
-
             container.appendChild(el);
         });
     }
 
-    // Логика перетаскивания
-    let dragSrcIndex = null;
-
-    function addDnDEvents(item) {
-        item.addEventListener('dragstart', (e) => {
-            dragSrcIndex = +item.dataset.index;
-            item.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-
-        item.addEventListener('dragend', () => {
-            item.classList.remove('dragging');
-            document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('drag-over'));
-        });
-
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            return false;
-        });
-
-        item.addEventListener('dragenter', () => {
-            item.classList.add('drag-over');
-        });
-
-        item.addEventListener('dragleave', () => {
-            item.classList.remove('drag-over');
-        });
-
-        item.addEventListener('drop', (e) => {
-            e.stopPropagation();
-            const dropIndex = +item.dataset.index;
-
-            if (dragSrcIndex !== dropIndex) {
-                // Меняем местами элементы в массиве
-                const movedItem = activeParams[dragSrcIndex];
-                activeParams.splice(dragSrcIndex, 1); // Удаляем из старого места
-                activeParams.splice(dropIndex, 0, movedItem); // Вставляем в новое
-
-                renderList();
-                generatePrompt();
-            }
-            return false;
-        });
-    }
-
-    // === 5. СБОРКА ПРОМТА ===
+    // === КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: ЛОГИКА СБОРКИ ===
     function generatePrompt() {
         const subject = document.getElementById('mainSubject').value.trim();
         let parts = [];
 
-        if (subject) parts.push(subject);
+        // Если есть субъект, добавляем его. Желательно, чтобы пользователь писал полное предложение.
+        if (subject) {
+            // Если субъект не заканчивается на точку, добавляем точку
+            let cleanSubject = subject;
+            if(!cleanSubject.endsWith('.') && !cleanSubject.endsWith('!') && !cleanSubject.endsWith('?')) {
+                cleanSubject += '.';
+            }
+            parts.push(cleanSubject);
+        }
 
-        // Важно: берем порядок из массива activeParams, который обновляется при Drag&Drop
-        activeParams.forEach(p => parts.push(p.value));
+        // Добавляем остальные части
+        activeParams.forEach(p => {
+            // Проверяем, начинается ли фраза с большой буквы (для красоты)
+            let val = p.value;
+            // val = val.charAt(0).toUpperCase() + val.slice(1); // Можно включить, если нужно
+            parts.push(val);
+        });
 
-        const finalStr = parts.join(', ');
+        // Соединяем через ТОЧКУ + ПРОБЕЛ. Это создает структуру предложений.
+        const finalStr = parts.join(' ');
+        // Или parts.join('. ') если фразы в JSON не заканчиваются точками,
+        // но в моем примере выше я сделал фразы без точек, поэтому лучше join('. ')
 
+        // Финальная очистка от двойных точек
         const out = document.getElementById('finalPrompt');
-        if(finalStr) {
-            out.innerText = finalStr;
+        if(parts.length > 0) {
+            // Собираем через точку, если в самих фразах точек нет
+            out.innerText = parts.join('. ') + (parts.length > 0 && !parts[parts.length-1].endsWith('.') ? '.' : '');
             out.classList.remove('text-slate-500');
             out.classList.add('text-white');
         } else {
             out.innerText = "Добавьте параметры или напишите текст...";
             out.classList.add('text-slate-500');
         }
+    }
+
+    // Drag & Drop функции (те же, что и были)
+    let dragSrcIndex = null;
+    function addDnDEvents(item) {
+        item.addEventListener('dragstart', (e) => {
+            dragSrcIndex = +item.dataset.index;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        item.addEventListener('dragover', (e) => { e.preventDefault(); return false; });
+        item.addEventListener('dragenter', () => { item.classList.add('drag-over'); });
+        item.addEventListener('dragleave', () => { item.classList.remove('drag-over'); });
+        item.addEventListener('drop', (e) => {
+            e.stopPropagation();
+            const dropIndex = +item.dataset.index;
+            if (dragSrcIndex !== dropIndex) {
+                const movedItem = activeParams[dragSrcIndex];
+                activeParams.splice(dragSrcIndex, 1);
+                activeParams.splice(dropIndex, 0, movedItem);
+                renderList();
+                generatePrompt();
+            }
+            return false;
+        });
     }
 
     function copyPrompt() {
@@ -346,17 +331,14 @@
     function openModal() {
         document.getElementById('modal').classList.remove('hidden');
         document.getElementById('modal').classList.add('flex');
-        // Сброс при открытии
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         document.getElementById('addBtn').disabled = true;
         document.getElementById('descriptionText').innerText = "Нажмите на чип...";
     }
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
-    // Запуск
     document.getElementById('mainSubject').addEventListener('input', generatePrompt);
     initSelectors();
-
 </script>
 </body>
 </html>
