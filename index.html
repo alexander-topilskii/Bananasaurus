@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nano Banana Modular Builder</title>
+    <title>Nano Banana Pro Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+
+        /* Стили для панелей */
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .selected-badge { background: #fbbf24; color: #000; font-weight: bold; }
+
+        /* Стили для чипов */
+        .chip { transition: all 0.2s; cursor: pointer; border: 1px solid #475569; }
+        .chip:hover { background-color: #334155; }
+        .chip.active { background-color: #fbbf24; color: #000; border-color: #fbbf24; font-weight: bold; transform: scale(1.05); }
+
+        /* Стили для Drag & Drop */
+        .draggable-item { cursor: grab; transition: transform 0.2s, box-shadow 0.2s; }
+        .draggable-item:active { cursor: grabbing; }
+        .draggable-item.dragging { opacity: 0.5; border: 2px dashed #fbbf24; background: #1e293b; }
+        .drag-over { border-top: 2px solid #fbbf24; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -16,26 +28,29 @@
 <div class="max-w-5xl mx-auto">
     <header class="text-center mb-8">
         <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
-            Nano Banana Modular Builder 🍌
+            Nano Banana Builder Pro 🍌
         </h1>
-        <p class="text-slate-400">Динамический конструктор промтов на основе JSON</p>
+        <p class="text-slate-400">Drag & Drop конструктор с подсказками</p>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         <div class="space-y-6">
             <div class="glass-panel p-6 rounded-2xl shadow-lg">
-                <label class="block text-yellow-400 font-bold mb-2 text-lg">Что рисуем? (Subject)</label>
-                <textarea id="mainSubject" rows="2" placeholder="Describe the main subject..."
+                <label class="block text-yellow-400 font-bold mb-2 text-lg">Что рисуем?</label>
+                <textarea id="mainSubject" rows="2" placeholder="Опишите основной объект..."
                           class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none"></textarea>
             </div>
 
-            <div id="activeModules" class="space-y-4">
+            <div>
+                <label class="block text-xs uppercase text-slate-500 mb-2 font-bold tracking-wider">Структура промта (перетаскивайте блоки):</label>
+                <div id="activeModules" class="space-y-3 min-h-[50px]">
+                </div>
             </div>
 
-            <div class="pt-4">
-                <button onclick="openModal()" class="w-full py-4 border-2 border-dashed border-slate-600 rounded-2xl text-slate-400 hover:border-yellow-400 hover:text-yellow-400 transition-all flex justify-center items-center gap-2">
-                    <span class="text-2xl">+</span> Добавить параметр (Камера, Свет, Стиль...)
+            <div class="pt-2">
+                <button onclick="openModal()" class="w-full py-4 border-2 border-dashed border-slate-600 rounded-2xl text-slate-400 hover:border-yellow-400 hover:text-yellow-400 transition-all flex justify-center items-center gap-2 group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">+</span> Добавить параметр
                 </button>
             </div>
         </div>
@@ -43,66 +58,109 @@
         <div class="sticky top-6 h-fit">
             <div class="glass-panel p-6 rounded-2xl shadow-lg border-yellow-500/30">
                 <h2 class="text-xl font-bold text-white mb-4 uppercase tracking-widest">Final Prompt</h2>
-                <div id="finalPrompt" class="w-full min-h-[150px] bg-black/50 rounded-xl p-4 text-slate-200 font-mono text-lg border border-slate-700 leading-relaxed mb-6">
+                <div id="finalPrompt" class="w-full min-h-[150px] bg-black/50 rounded-xl p-4 text-slate-200 font-mono text-lg border border-slate-700 leading-relaxed mb-6 overflow-y-auto max-h-[400px]">
                     Start building...
                 </div>
-                <button onclick="copyPrompt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
-                    Копировать для Nano Banana
+                <button onclick="copyPrompt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-95">
+                    Копировать промт
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<div id="modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
-    <div class="glass-panel w-full max-w-md p-8 rounded-3xl space-y-6">
-        <h3 class="text-2xl font-bold text-white text-center">Конструктор параметра</h3>
-
-        <div>
-            <label class="block text-xs uppercase text-slate-400 mb-2">1. Группа</label>
-            <select id="groupSelect" onchange="updateTypes()" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-600"></select>
+<div id="modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="glass-panel w-full max-w-2xl p-6 md:p-8 rounded-3xl flex flex-col max-h-[90vh]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-white">Добавить параметр</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
         </div>
 
-        <div>
-            <label class="block text-xs uppercase text-slate-400 mb-2">2. Тип</label>
-            <select id="typeSelect" onchange="updateValues()" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-600"></select>
+        <div class="space-y-5 overflow-y-auto pr-2 custom-scroll">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs uppercase text-slate-400 mb-2 font-bold">Группа</label>
+                    <select id="groupSelect" onchange="updateTypes()" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-600 text-white outline-none focus:border-yellow-500"></select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase text-slate-400 mb-2 font-bold">Тип</label>
+                    <select id="typeSelect" onchange="renderChips()" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-600 text-white outline-none focus:border-yellow-500"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-slate-400 mb-2 font-bold">Выберите значение:</label>
+                <div id="chipsContainer" class="flex flex-wrap gap-2">
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 min-h-[80px]">
+                <span class="text-xs text-yellow-500 uppercase font-bold block mb-1">Описание настройки:</span>
+                <p id="descriptionText" class="text-slate-300 text-sm italic">Выберите чип выше, чтобы увидеть описание...</p>
+            </div>
         </div>
 
-        <div>
-            <label class="block text-xs uppercase text-slate-400 mb-2">3. Значение</label>
-            <select id="valueSelect" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-600"></select>
-        </div>
-
-        <div class="flex gap-4 pt-4">
-            <button onclick="closeModal()" class="flex-1 py-3 text-slate-400 hover:text-white transition-colors">Отмена</button>
-            <button onclick="addSelectedParameter()" class="flex-1 py-3 bg-yellow-500 text-black font-bold rounded-xl">Добавить</button>
+        <div class="pt-6 mt-auto">
+            <button onclick="addSelectedParameter()" id="addBtn" disabled class="w-full py-3 bg-yellow-500 text-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-400 transition">
+                Добавить в промт
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. JSON Конфигурация (легко расширять)
+    // === 1. JSON KONFIGURATION (С ОПИСАНИЯМИ) ===
     const PROMPT_CONFIG = {
-        "Стиль": {
-            "Арт-стиль": ["Oil painting", "Digital art", "Pencil sketch", "Watercolour"],
-            "Рендер": ["Unreal Engine 5", "Octane Render", "Pixar style", "Ray tracing"]
+        "Свет": {
+            "Время суток": [
+                { val: "Golden hour", desc: "Золотой час. Мягкий, теплый, объемный свет перед закатом. Идеально для портретов и пейзажей." },
+                { val: "Blue hour", desc: "Синий час. Сумеречное, холодное освещение сразу после заката. Создает меланхолию." },
+                { val: "Midday sun", desc: "Жесткий полуденный свет. Четкие, резкие тени. Высокий контраст." }
+            ],
+            "Искусственный": [
+                { val: "Neon lighting", desc: "Яркие неоновые огни (киберпанк). Розовые, голубые оттенки, глубокие тени." },
+                { val: "Studio lighting", desc: "Профессиональный студийный свет. Идеальная кожа, мягкие тени, софтбоксы." },
+                { val: "Candlelight", desc: "Свет от свечи. Очень теплый, мерцающий, интимный свет с глубокими тенями." }
+            ],
+            "Атмосфера": [
+                { val: "Volumetric lighting", desc: "Объемный свет (God rays). Лучи света, пробивающиеся через дымку или пыль." },
+                { val: "Cinematic lighting", desc: "Киношное освещение. Драматичный контраст, акцент на объекте." }
+            ]
         },
         "Камера": {
-            "Объектив": ["35mm lens", "85mm portrait", "Wide angle shot", "Macro shot"],
-            "Ракурс": ["Low angle shot", "Drone view", "Top down view", "Ground level"]
+            "Ракурс": [
+                { val: "Drone view", desc: "Вид с дрона. Съемка с большой высоты, показывает масштаб локации." },
+                { val: "Low angle shot", desc: "Нижний ракурс. Камера смотрит снизу вверх, делая объект величественным и огромным." },
+                { val: "Eye level", desc: "На уровне глаз. Нейтральный, реалистичный взгляд." },
+                { val: "Top down view", desc: "Строго сверху вниз (Flat lay). Хорошо для схем, карт или натюрмортов." }
+            ],
+            "Объектив": [
+                { val: "Macro shot", desc: "Макросъемка. Экстремально близко, видно текстуры и мелкие детали." },
+                { val: "Fisheye lens", desc: "Рыбий глаз. Сильное искажение по краям, очень широкий угол обзора." },
+                { val: "35mm lens", desc: "Классический объектив 35мм. Естественное восприятие, как в кино." },
+                { val: "Telephoto lens", desc: "Телеобъектив. Сжимает перспективу, фон кажется ближе к объекту." }
+            ]
         },
-        "Свет": {
-            "Тип": ["Golden hour", "Neon lighting", "Studio lighting", "Cinematic contrast"],
-            "Атмосфера": ["Moody haze", "Sunbeams", "Foggy night", "Soft natural light"]
-        },
-        "Детализация": {
-            "Качество": ["Hyper-realistic", "High detail", "Intricate textures", "Masterpiece"]
+        "Стиль": {
+            "Арт": [
+                { val: "Oil painting", desc: "Масляная живопись. Видны мазки кисти, текстура холста." },
+                { val: "Watercolor", desc: "Акварель. Полупрозрачные краски, потеки, легкость." },
+                { val: "Pencil sketch", desc: "Карандашный набросок. Черно-белый, штриховка, графика." },
+                { val: "Pixel art", desc: "Пиксель-арт. Стилистика старых 8-битных игр." }
+            ],
+            "3D & Render": [
+                { val: "Unreal Engine 5", desc: "Ультра-реалистичный рендер игровой графики нового поколения." },
+                { val: "Claymation", desc: "Пластилиновая анимация. Мягкие формы, стиль 'Уоллес и Громит'." },
+                { val: "Low poly", desc: "Низкополигональная 3D графика. Угловатые формы, минимализм." }
+            ]
         }
     };
 
-    let selectedParameters = []; // Список активных пар {type, value}
+    // Состояние приложения
+    let activeParams = [];
+    let tempSelection = null; // { val, desc }
 
-    // Рендер выпадающих списков
+    // === 2. ИНИЦИАЛИЗАЦИЯ СЕЛЕКТОРОВ ===
     function initSelectors() {
         const groupSelect = document.getElementById('groupSelect');
         groupSelect.innerHTML = Object.keys(PROMPT_CONFIG).map(g => `<option value="${g}">${g}</option>`).join('');
@@ -113,72 +171,192 @@
         const group = document.getElementById('groupSelect').value;
         const typeSelect = document.getElementById('typeSelect');
         typeSelect.innerHTML = Object.keys(PROMPT_CONFIG[group]).map(t => `<option value="${t}">${t}</option>`).join('');
-        updateValues();
+        renderChips();
     }
 
-    function updateValues() {
+    // === 3. РЕНДЕР ЧИПОВ (НОВАЯ ФИЧА) ===
+    function renderChips() {
         const group = document.getElementById('groupSelect').value;
         const type = document.getElementById('typeSelect').value;
-        const valueSelect = document.getElementById('valueSelect');
-        valueSelect.innerHTML = PROMPT_CONFIG[group][type].map(v => `<option value="${v}">${v}</option>`).join('');
+        const container = document.getElementById('chipsContainer');
+
+        // Очистка
+        container.innerHTML = '';
+        document.getElementById('descriptionText').innerText = "Нажмите на чип, чтобы увидеть описание...";
+        document.getElementById('addBtn').disabled = true;
+        tempSelection = null;
+
+        // Генерация кнопок
+        PROMPT_CONFIG[group][type].forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'chip bg-slate-700 text-slate-200 px-4 py-2 rounded-full text-sm font-medium shadow-sm';
+            btn.innerText = item.val;
+
+            btn.onclick = () => {
+                // Сброс активного класса у всех
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                // Активация текущего
+                btn.classList.add('active');
+                // Показ описания
+                document.getElementById('descriptionText').innerText = item.desc;
+                // Сохранение выбора
+                tempSelection = { ...item, typeName: type };
+                // Включение кнопки
+                document.getElementById('addBtn').disabled = false;
+            };
+            container.appendChild(btn);
+        });
     }
 
-    // Модальное окно
-    function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
-    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+    // === 4. УПРАВЛЕНИЕ СПИСКОМ И DRAG & DROP ===
 
-    // Добавление в список
     function addSelectedParameter() {
-        const type = document.getElementById('typeSelect').value;
-        const value = document.getElementById('valueSelect').value;
+        if(!tempSelection) return;
 
-        selectedParameters.push({ id: Date.now(), type, value });
+        const newParam = {
+            id: Date.now(),
+            type: tempSelection.typeName,
+            value: tempSelection.val,
+            desc: tempSelection.desc
+        };
+
+        activeParams.push(newParam);
+        renderList();
+        generatePrompt();
         closeModal();
-        renderActiveModules();
+    }
+
+    function removeParam(id) {
+        activeParams = activeParams.filter(p => p.id !== id);
+        renderList();
         generatePrompt();
     }
 
-    // Удаление
-    function removeParameter(id) {
-        selectedParameters = selectedParameters.filter(p => p.id !== id);
-        renderActiveModules();
-        generatePrompt();
-    }
-
-    // Отрисовка карточек на странице
-    function renderActiveModules() {
+    // Отрисовка списка с поддержкой Drag & Drop
+    function renderList() {
         const container = document.getElementById('activeModules');
-        container.innerHTML = selectedParameters.map(p => `
-                <div class="glass-panel p-4 rounded-xl flex justify-between items-center border-l-4 border-yellow-400 animate-slide-in">
-                    <div>
-                        <span class="text-[10px] uppercase text-slate-500 block">${p.type}</span>
-                        <span class="text-white font-medium">${p.value}</span>
+        container.innerHTML = '';
+
+        activeParams.forEach((param, index) => {
+            const el = document.createElement('div');
+            el.className = 'draggable-item glass-panel p-3 rounded-xl flex justify-between items-center border-l-4 border-yellow-500';
+            el.setAttribute('draggable', 'true');
+            el.dataset.index = index;
+
+            el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="cursor-grab text-slate-500 hover:text-white" title="Тяни меня">
+                            <svg width="12" height="20" viewBox="0 0 6 10" fill="currentColor">
+                                <circle cx="1" cy="1" r="1"/><circle cx="1" cy="5" r="1"/><circle cx="1" cy="9" r="1"/>
+                                <circle cx="5" cy="1" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="5" cy="9" r="1"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 block tracking-wider">${param.type}</span>
+                            <span class="text-white font-medium text-lg">${param.value}</span>
+                        </div>
                     </div>
-                    <button onclick="removeParameter(${p.id})" class="text-slate-500 hover:text-red-400">✕</button>
-                </div>
-            `).join('');
+                    <button onclick="removeParam(${param.id})" class="text-slate-500 hover:text-red-400 p-2 text-xl">&times;</button>
+                `;
+
+            // События Drag & Drop
+            addDnDEvents(el);
+
+            container.appendChild(el);
+        });
     }
 
-    // Сборка финального промта
+    // Логика перетаскивания
+    let dragSrcIndex = null;
+
+    function addDnDEvents(item) {
+        item.addEventListener('dragstart', (e) => {
+            dragSrcIndex = +item.dataset.index;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('drag-over'));
+        });
+
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        item.addEventListener('dragenter', () => {
+            item.classList.add('drag-over');
+        });
+
+        item.addEventListener('dragleave', () => {
+            item.classList.remove('drag-over');
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.stopPropagation();
+            const dropIndex = +item.dataset.index;
+
+            if (dragSrcIndex !== dropIndex) {
+                // Меняем местами элементы в массиве
+                const movedItem = activeParams[dragSrcIndex];
+                activeParams.splice(dragSrcIndex, 1); // Удаляем из старого места
+                activeParams.splice(dropIndex, 0, movedItem); // Вставляем в новое
+
+                renderList();
+                generatePrompt();
+            }
+            return false;
+        });
+    }
+
+    // === 5. СБОРКА ПРОМТА ===
     function generatePrompt() {
         const subject = document.getElementById('mainSubject').value.trim();
         let parts = [];
 
         if (subject) parts.push(subject);
-        selectedParameters.forEach(p => parts.push(p.value));
+
+        // Важно: берем порядок из массива activeParams, который обновляется при Drag&Drop
+        activeParams.forEach(p => parts.push(p.value));
 
         const finalStr = parts.join(', ');
-        document.getElementById('finalPrompt').innerText = finalStr || "Start building...";
+
+        const out = document.getElementById('finalPrompt');
+        if(finalStr) {
+            out.innerText = finalStr;
+            out.classList.remove('text-slate-500');
+            out.classList.add('text-white');
+        } else {
+            out.innerText = "Добавьте параметры или напишите текст...";
+            out.classList.add('text-slate-500');
+        }
     }
 
     function copyPrompt() {
         const text = document.getElementById('finalPrompt').innerText;
         navigator.clipboard.writeText(text);
-        alert("Промт скопирован!");
+        const btn = document.querySelector('button[onclick="copyPrompt()"]');
+        const old = btn.innerText;
+        btn.innerText = "Скопировано! ✅";
+        setTimeout(() => btn.innerText = old, 2000);
     }
 
+    function openModal() {
+        document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('modal').classList.add('flex');
+        // Сброс при открытии
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('addBtn').disabled = true;
+        document.getElementById('descriptionText').innerText = "Нажмите на чип...";
+    }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    // Запуск
     document.getElementById('mainSubject').addEventListener('input', generatePrompt);
     initSelectors();
+
 </script>
 </body>
 </html>
