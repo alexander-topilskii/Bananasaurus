@@ -1,13 +1,219 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bananasaurus</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana Prompt Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .option-btn {
+            transition: all 0.2s;
+        }
+        .option-btn.active {
+            background-color: #fbbf24; /* Banana Yellow */
+            color: #000;
+            border-color: #fbbf24;
+            font-weight: bold;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+<div class="max-w-4xl mx-auto">
+    <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+            Bananasaurus - Nano Banana Builder 🍌
+        </h1>
+        <p class="text-slate-400">Конструктор идеальных промтов для Gemini / Nano Banana</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="space-y-6">
+
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <label class="block text-yellow-400 font-bold mb-2 text-lg">1. Что рисуем? (Основа)</label>
+                <textarea id="mainSubject" rows="3" placeholder="Например: Кот-космонавт сидит в кафе..."
+                          class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none placeholder-slate-500"></textarea>
+                <p class="text-xs text-slate-500 mt-2">Опишите главного героя и действие.</p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <label class="block text-yellow-400 font-bold mb-2">2. Текст на картинке (Опционально)</label>
+                <input type="text" id="textRender" placeholder='Например: COFFEE TIME'
+                       class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:ring-2 focus:ring-yellow-400 outline-none">
+                <p class="text-xs text-slate-500 mt-2">Nano Banana отлично умеет писать текст. Пишите без кавычек.</p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <label class="block text-yellow-400 font-bold mb-3">3. Стиль и Рендер</label>
+                <div class="flex flex-wrap gap-2" id="styleOptions">
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', 'Cinematic photo, highly detailed')">Кино-фото</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', '3D render, Pixar style, Unreal Engine 5')">3D / Pixar</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', 'Anime style, Studio Ghibli aesthetics')">Аниме</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', 'Oil painting, classical art')">Масло</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', 'Cyberpunk, neon aesthetic')">Киберпанк</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'style', 'Vintage 1980s photo, grainy')">Винтаж 80-х</button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <label class="block text-yellow-400 font-bold mb-3">4. Свет и Атмосфера</label>
+                <div class="flex flex-wrap gap-2" id="lightOptions">
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'light', 'Soft natural morning lighting')">Утренний свет</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'light', 'Dramatic cinematic lighting, high contrast')">Драматичный</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'light', 'Neon lighting, dark atmosphere')">Неон/Ночь</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'light', 'Professional studio lighting')">Студийный</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'light', 'Golden hour sunlight')">Золотой час</button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl shadow-lg">
+                <label class="block text-yellow-400 font-bold mb-3">5. Камера</label>
+                <div class="flex flex-wrap gap-2" id="cameraOptions">
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'camera', 'Macro shot, extreme close-up, depth of field')">Макро</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'camera', 'Wide angle shot, panoramic view')">Широкий угол</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'camera', 'Shot on 35mm lens, bokeh background')">Портрет 35mm</button>
+                    <button class="option-btn border border-slate-600 px-3 py-1 rounded-full text-sm hover:bg-slate-700" onclick="toggleOption(this, 'camera', 'Drone view from above')">С дрона</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="relative">
+            <div class="sticky top-6">
+                <div class="glass-panel p-6 rounded-2xl shadow-lg border-yellow-500/30">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-white">Ваш Промт</h2>
+                        <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">English Only</span>
+                    </div>
+
+                    <div id="finalPrompt" class="w-full h-64 bg-black/50 rounded-xl p-4 text-slate-200 font-mono text-sm overflow-y-auto mb-4 border border-slate-700">
+                        Start typing to see the magic...
+                    </div>
+
+                    <button onclick="copyPrompt()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-3 px-6 rounded-xl shadow-lg transform active:scale-95 transition-all flex justify-center items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Копировать промт
+                    </button>
+
+                    <div class="mt-4 text-xs text-slate-500">
+                        <p>Совет: Nano Banana лучше понимает английский. Этот конструктор автоматически переводит структуру на англ. (кроме вашего ввода — его лучше писать сразу на английском или использовать переводчик).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Хранилище выбранных опций
+    const selections = {
+        subject: '',
+        text: '',
+        style: '',
+        light: '',
+        camera: ''
+    };
+
+    // Слушатели ввода текста
+    document.getElementById('mainSubject').addEventListener('input', (e) => {
+        selections.subject = e.target.value;
+        generatePrompt();
+    });
+
+    document.getElementById('textRender').addEventListener('input', (e) => {
+        selections.text = e.target.value;
+        generatePrompt();
+    });
+
+    // Функция обработки кнопок
+    function toggleOption(btn, category, value) {
+        // Убираем активный класс у всех кнопок в этой категории
+        const parent = btn.parentElement;
+        const buttons = parent.getElementsByClassName('option-btn');
+
+        // Если кнопка уже активна — снимаем выбор
+        if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            selections[category] = '';
+        } else {
+            // Иначе активируем её и деактивируем остальные
+            for (let b of buttons) {
+                b.classList.remove('active');
+            }
+            btn.classList.add('active');
+            selections[category] = value;
+        }
+        generatePrompt();
+    }
+
+    // Логика сборки промта (Формула слоеного пирога)
+    function generatePrompt() {
+        let promptParts = [];
+
+        // 1. Стиль идет первым (задает тон)
+        if (selections.style) promptParts.push(selections.style);
+
+        // 2. Основной субъект
+        if (selections.subject) {
+            // Если стиль выбран, добавляем "image of..." для связности
+            let subjectText = selections.subject.trim();
+            promptParts.push(subjectText);
+        }
+
+        // 3. Текст (если есть) - Nano Banana любит формат: text "XYZ" visible on...
+        if (selections.text) {
+            promptParts.push(`with clearly visible text "${selections.text}" written on it`);
+        }
+
+        // 4. Окружение и Свет
+        if (selections.light) promptParts.push(`Lighting: ${selections.light}`);
+
+        // 5. Камера и детали
+        if (selections.camera) promptParts.push(`Camera angle: ${selections.camera}`);
+
+        // 6. Финальный полиш
+        promptParts.push("High quality, 4k resolution.");
+
+        // Сборка
+        const finalString = promptParts.join('. ');
+
+        const displayArea = document.getElementById('finalPrompt');
+        if (!selections.subject && !selections.style) {
+            displayArea.innerText = "Опишите, что нужно нарисовать, или выберите стиль...";
+            displayArea.classList.add('text-slate-500');
+            displayArea.classList.remove('text-white');
+        } else {
+            displayArea.innerText = finalString;
+            displayArea.classList.remove('text-slate-500');
+            displayArea.classList.add('text-white');
+        }
+    }
+
+    // Копирование в буфер
+    function copyPrompt() {
+        const text = document.getElementById('finalPrompt').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('button[onclick="copyPrompt()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Скопировано! ✅";
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+</script>
+</body>
 </html>
